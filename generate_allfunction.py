@@ -14,6 +14,7 @@ excluded_functions = {"loop", "setup", "hexToNeopixelbus"}
 
 # Regex
 function_regex = re.compile(r"^\s*([a-zA-Z_][\w\s\*]+)\s+([a-zA-Z_]\w*)\s*\(([^)]*)\)\s*\{")
+struct_regex = re.compile(r"^\s*struct\s+([a-zA-Z_]\w*)\s*\{")
 include_regex = re.compile(r'^\s*#include\s*[<"]([^">]+)[">]')
 
 # --- Étape 1 : récupérer les includes valides dans main.cpp
@@ -28,15 +29,25 @@ with open(main_file, "r", encoding="utf-8") as main:
 
 print("Headers utilisés :", included_headers)
 
-# --- Étape 2 : extraire uniquement les fonctions des fichiers inclus
+# --- Étape 2 : extraire structures et fonctions des fichiers inclus
+structures_by_file = {}
 functions_by_file = {}
 
-def extract_functions_from_file(file_path, header_key):
+def extract_from_file(file_path, header_key):
     with open(file_path, "r", encoding="utf-8") as file:
         for line in file:
-            match = function_regex.match(line)
-            if match:
-                return_type, func_name, params = match.groups()
+            # Extraction des structures
+            struct_match = struct_regex.match(line)
+            if struct_match:
+                struct_name = struct_match.group(1)
+                if header_key not in structures_by_file:
+                    structures_by_file[header_key] = set()
+                structures_by_file[header_key].add(f"struct {struct_name};")
+            
+            # Extraction des fonctions
+            func_match = function_regex.match(line)
+            if func_match:
+                return_type, func_name, params = func_match.groups()
                 if func_name in excluded_functions:
                     continue
                 if func_name in {"if", "else"}:
@@ -60,7 +71,7 @@ def extract_from_dir(directory, relative_prefix=""):
                     continue  # pas inclus → on skip
 
                 file_path = os.path.join(root, filename)
-                extract_functions_from_file(file_path, rel_path)
+                extract_from_file(file_path, rel_path)
 
 # Extraction (src + include + DONOTTOUCH)
 extract_from_dir(include_dir)
@@ -69,11 +80,29 @@ extract_from_dir(src_dir)
 
 # --- Étape 3 : générer le fichier
 with open(output_file, "w", encoding="utf-8") as out_file:
-    out_file.write("// Fichier généré automatiquement\n\n")
-    for filename, functions in functions_by_file.items():
+    out_file.write("// Fichier généré automatiquement\n")
+    out_file.write("// Includes nécessaires pour les types utilisés\n")
+    out_file.write("#include <NeoPixelBus.h>\n")
+    out_file.write("#include <ArduinoJson.h>\n\n")
+    
+    # Récupérer tous les fichiers uniques
+    all_files = set(list(structures_by_file.keys()) + list(functions_by_file.keys()))
+    
+    for filename in sorted(all_files):
         out_file.write(f"// {filename}\n")
-        for function in sorted(functions):  # tri pour ordre stable
-            out_file.write(f"    {function}\n")
+        
+        # Structures d'abord
+        if filename in structures_by_file:
+            for struct in sorted(structures_by_file[filename]):
+                out_file.write(f"    {struct}\n")
+        
+        # Ensuite les fonctions
+        if filename in functions_by_file:
+            for function in sorted(functions_by_file[filename]):
+                out_file.write(f"    {function}\n")
+        
         out_file.write("\n")
 
-print(f"Fichier {output_file} mis à jour avec {sum(len(f) for f in functions_by_file.values())} fonctions.")
+total_structs = sum(len(s) for s in structures_by_file.values())
+total_functions = sum(len(f) for f in functions_by_file.values())
+print(f"Fichier {output_file} mis à jour avec {total_structs} structures et {total_functions} fonctions.")

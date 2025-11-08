@@ -13,19 +13,19 @@
 // Include Généraux
   #include <DONOTTOUCH/VariablesGlobales.h>
   #include <Variables.h>
-  #include <LED_RGB.h>     // Gestion des LEDs choisir celui adapté au led (LED_RGB.h ou LED_RGBW.h) ou commenter pour ne pas utiliser
   #include "AllFunction.h" // Fichier généré automatiquement pour éviter les erreurs de "fonction non déclarées"
   #include "DONOTTOUCH/setupSPIFFS.h"   // Gestion du système de fichier SPIFFS
   #include "DONOTTOUCH/OTA_Update.h"    // Gestion des mises à jour OTA (setupWIFI.H doit etre activé)
   #include "Fonctions.h"                // Include diverses fonctions utiles
-  // #include <pinout.h>                  // Gestion des pins
   // #include <Alexa.h>                 // Utilisation de Alexa (setupWIFI.H doit etre activé)
   #include <setupWIFI.h>             // Gestion du Wi-Fi et du Hotspot
 
 // Include diverses
+  // #include <Horloge_grande.h>   // Choisissser le type d'horloge (grande ou mini)
+  #include <Horloge_Mini.h>  // Choisissser le type d'horloge (grande ou mini)
+  #include <Infrarouge.h>   // Gestion du module infrarouge
   #include <RTC.h>   // Gestion du module RTC
-  #include <Horloge_grande.h>   // Choisissser le type d'horloge (grande ou mini)
-  // #include <Horloge_Mini.h>  // Choisissser le type d'horloge (grande ou mini)
+  #include <LED_RGB.h>     // Gestion des LEDs choisir celui adapté au led (LED_RGB.h ou LED_RGBW.h) ou commenter pour ne pas utiliser
 
 void setup() {
   // Initialisation de la communication série
@@ -36,10 +36,12 @@ void setup() {
     #endif
 
   // Setup des inputs outputs
-    #ifdef pinoutH
-      SetupInOut();
+      SetupPinout();
       delay(10);
-    #endif
+
+  // Setup du Real Time Clock
+      setupRTC();
+      delay(10);
 
   // Paramétrage de la LED
     #ifdef ledrgbH
@@ -91,6 +93,10 @@ void setup() {
     #endif
 
   // Ajouter ici les autres fonctions de setup si besoin
+    setupRTC(); delay(10);
+    #if defined(PIN_INFRAROUGE)
+      setupInfrarouge(); delay(10);
+    #endif
 
   // Finalisation du Setup
     #if defined(DEBUG) && defined(setupSpiffsH)
@@ -108,13 +114,13 @@ void loop() {
       loop_Wifi();
     #endif
 
-  // Gestion de la LED
-    #ifdef ledrgbH
-      breath.update();  // Update des fonctions spéciales pour la LED
-      blink.update();   // Update des fonctions spéciales pour la LED
+  // Gestion de l'infrarouge
+    #if defined(PIN_INFRAROUGE)
+      loop_Infrarouge();
     #endif
 
-
+  // Gestion de l'affichage de l'heure
+  Loop_Ecran();
 
   delay(1);
 }

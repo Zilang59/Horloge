@@ -328,11 +328,6 @@ void setupHotspot() {
 
 
 void accueil(WebServer* activeServer) {
-  // Clignotement pour montrer qu'on est bien sur ce dispositif
-    #ifdef ledrgbH
-      blink.start(hexToNeopixelbus("#ffffff"), 5, 20);
-    #endif
-
   // Mise en mémoire de la bonne page a afficher
   String html = "";
   html = SiteWeb_Accueil;
@@ -347,11 +342,6 @@ void accueil(WebServer* activeServer) {
     activeServer->send(200, "text/html", html); 
 }
 void gestion_wifi(WebServer* activeServer) {
-  // Clignotement pour montrer qu'on est bien sur ce dispositif
-    #ifdef ledrgbH
-      blink.start(hexToNeopixelbus("#ffffff"), 5, 20);
-    #endif
-
   String html = "";
   html = SiteWeb_GestionWifi;
 
@@ -370,11 +360,6 @@ void gestion_wifi(WebServer* activeServer) {
   activeServer->send(200, "text/html", html);
 }
 void informations(WebServer* activeServer) {
-  // Clignotement pour montrer qu'on est bien sur ce dispositif
-    #ifdef ledrgbH
-      blink.start(hexToNeopixelbus("#ffffff"), 5, 20);
-    #endif
-
   // Mise en mémoire de la bonne page a afficher
   String html = "";
   html = SiteWeb_Informations;

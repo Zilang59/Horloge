@@ -1,4 +1,20 @@
 // Fichier généré automatiquement
+// Includes nécessaires pour les types utilisés
+#include <NeoPixelBus.h>
+#include <ArduinoJson.h>
+
+// DONOTTOUCH/OTA_Update.h
+    void handleOTA();
+    void setupOTA();
+
+// DONOTTOUCH/setupSPIFFS.h
+    String ReadParametreFile();
+    bool setupSPIFFS();
+    void deleteFile(const char* fileName);
+    void modifJson(String type, String key, String newValue, String fileName);
+    void printMemorySummary();
+    void setupSPIFFS_parametres();
+    void setupSPIFFS_wififile();
 
 // Fonctions.h
     String decryptPassword(const String& encryptedPassword);
@@ -6,23 +22,31 @@
     String formatTime(uint16_t totalSeconds);
     String getDeviceKey();
 
+// Horloge_Mini.h
+    void Loop_Ecran();
+    void SetupPinout();
+    void ShowHeure();
+    void afficherChiffre(int chiffre, int digit);
+    void afficherSecondes(int pourcentage);
+
+// Infrarouge.h
+    void loop_Infrarouge();
+    void setupInfrarouge();
+
 // LED_RGB.h
-    void DefineLed(RgbColor color, int startLED, int endLED);
-    void FadeLight(RgbColor FromColor, RgbColor ToColor, int startLED, int endLED, int steps);
-    void LED_clignotement(RgbColor color, int boucle, int rapidite, int startled, int stopled);
     void LED_setup();
-    void blinkBlocking(RgbColor color, int flashes, int speed);
-    void setColor(RgbColor color);
-    void setEnabled(bool state);
-    void setSpeed(int ms);
-    void setSpeed(int speed);
-    void start(RgbColor color, int flashes, int speed);
-    void start(int start, int end, RgbColor col);
-    void update();
+    void setLEDsWithBrightness(String hexColor, uint16_t ledIndices[], uint16_t numLeds, uint8_t brightness);
 
 // RTC.h
     String readRTC();
     int extractInt(String json, const char* key);
+    void UpdateHeure();
+    void setupRTC();
+
+// Variables.h
+    struct Parametres;
+    void fromJson(JsonDocument& doc);
+    void toJson(JsonDocument& doc);
 
 // setupWIFI.h
     String getUniqueESP32ID();
@@ -41,21 +65,4 @@
     void setupHotspot();
     void startWebServer();
     void update_firmware(WebServer* activeServer);
-
-// Variables.h
-    void fromJson(JsonDocument& doc);
-    void toJson(JsonDocument& doc);
-
-// DONOTTOUCH/OTA_Update.h
-    void handleOTA();
-    void setupOTA();
-
-// DONOTTOUCH/setupSPIFFS.h
-    String ReadParametreFile();
-    bool setupSPIFFS();
-    void deleteFile(const char* fileName);
-    void modifJson(String type, String key, String newValue, String fileName);
-    void printMemorySummary();
-    void setupSPIFFS_parametres();
-    void setupSPIFFS_wififile();
 

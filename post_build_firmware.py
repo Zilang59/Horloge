@@ -63,7 +63,7 @@ def post_build_action(source, target, env):
         # Supprimer l'ancien fichier s'il existe
         if new_firmware_path.exists():
             new_firmware_path.unlink()
-            print(f"🗑️ Ancien firmware supprimé : {new_firmware_name}")
+            print(f"🗑️  Ancien firmware supprimé : {new_firmware_name}")
         
         # Copier le nouveau fichier
         shutil.copy2(firmware_source, new_firmware_path)
