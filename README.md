@@ -43,7 +43,7 @@ Une horloge numérique connectée affichant l'heure sur des LED RGB, compatible 
 
 ### Version Portable - Horloge compacte sur batterie
 <div align="center">
-  <img src="./images/Mini Horloge.jpg" alt="Version Portable" width="400">
+  <img src="./images/Mini%20Horloge.jpg" alt="Version Portable" width="400">
   <p><i>Mini horloge - Batterie rechargeable USB-C 5V</i></p>
 </div>
 
