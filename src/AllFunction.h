@@ -41,6 +41,7 @@
 
 // RTC.h
     String readRTC();
+    bool updateRTC(String timeParam);
     int extractInt(String json, const char* key);
     void UpdateHeure();
     void setupRTC();
@@ -60,6 +61,7 @@
     void check_firmware_updates(WebServer* activeServer);
     void gestion_wifi(WebServer* activeServer);
     void informations(WebServer* activeServer);
+    void option(WebServer* activeServer);
     void parameter_info(WebServer* activeServer);
     void parametres(WebServer* clientServer);
     void resetESP();

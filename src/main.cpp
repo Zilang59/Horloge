@@ -43,12 +43,6 @@ void setup() {
       setupRTC();
       delay(10);
 
-  // Paramétrage de la LED
-    #ifdef ledrgbH
-      LED_setup();
-      delay(10);
-    #endif
-
   // Paramétrage des fichiers et des paramètres mémoire
     #ifdef setupSpiffsH
       DEBUG_PRINT("\n--MONTAGE SPIFFS-------------------------\n");
@@ -65,6 +59,13 @@ void setup() {
       }
 
       DEBUG_PRINT("-----------------------------------------\n");
+      delay(10);
+    #endif
+
+    
+  // Paramétrage de la LED
+    #ifdef ledrgbH
+      LED_setup();
       delay(10);
     #endif
 

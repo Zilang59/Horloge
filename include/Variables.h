@@ -36,3 +36,4 @@
     bool RTCok = false;
 
 // Ajout d'autre variable globales ici si besoin
+    bool update_screen = false; // Si true, l'écran sera rafraîchi à la prochaine boucle

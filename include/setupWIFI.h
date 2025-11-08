@@ -228,6 +228,7 @@ void startWebServer() {
   server.on("/wifi", HTTP_GET, [&](){ gestion_wifi(&server); });
   server.on("/informations", HTTP_GET, [&](){ informations(&server); });
   server.on("/admin_site", HTTP_GET, [&](){ admin_site(&server); });
+  server.on("/option", HTTP_GET, [&](){ option(&server); });
   server.on("/parametres", HTTP_GET, [&](){ parametres(&server); });
   server.on("/parameter_info", HTTP_GET, [&](){ parameter_info(&server); });
   server.on("/resetparam", HTTP_GET, resetPARAMETRE);
@@ -284,6 +285,7 @@ void setupHotspot() {
   hotspot.on("/accueil", HTTP_GET, [&](){ accueil(&hotspot); });
   hotspot.on("/informations", HTTP_GET, [&](){ informations(&hotspot); });
   hotspot.on("/admin_site", HTTP_GET, [&](){ admin_site(&hotspot); });
+  hotspot.on("/option", HTTP_GET, [&](){ option(&hotspot); });
   hotspot.on("/parametres", HTTP_GET, [&](){ parametres(&hotspot); });
   hotspot.on("/parameter_info", HTTP_GET, [&](){ parameter_info(&hotspot); });
   hotspot.on("/reset", HTTP_GET, resetESP);
@@ -336,7 +338,10 @@ void accueil(WebServer* activeServer) {
     String DispoName = Dispo_basename + "_" + ID_MAC;
     html.replace("%DISPO_NAME%", DispoName);
     html.replace("%DISPLAY_MENU_ADMIN%", param.Admin_site ? "display:block;" : "display:none;");
-    html.replace("%MENU_ADMIN%", param.Admin_site ? "true" : "false");
+    html.replace("'%MENU_ADMIN%'", param.Admin_site ? "true" : "false");
+
+    html.replace("%COULEUR%", String(param.couleur));
+    html.replace("%LUMINOSITE%", String(param.luminosite));
 
   // Send le site web
     activeServer->setContentLength(html.length());
@@ -385,6 +390,54 @@ void informations(WebServer* activeServer) {
     activeServer->send(200, "text/html", html); 
 }
 
+void option(WebServer* activeServer) {
+  if(activeServer->hasArg("parametre")) {
+    if(activeServer->arg("parametre") == "1") { // Couleur de la LED
+      String colorOn = activeServer->arg("color");
+
+      // Sauvegarder ou utiliser les couleurs selon le besoin
+      DEBUG_PRINTLN("Couleur Allumée : " + colorOn);
+
+      param.couleur = colorOn;
+  
+      // Réponse JSON pour confirmer la mise à jour
+      activeServer->send(200, "application/json", "{\"status\":\"success\"}");
+
+      delay(100);
+
+      modifJson("String", "couleur", param.couleur, PARAMETRE_FILE);
+
+      update_screen = true;
+    }
+    if(activeServer->arg("parametre") == "2") { // Luminosité des LEDs
+      String luminosite = activeServer->arg("luminosite");
+      param.luminosite = luminosite.toInt();
+      DEBUG_PRINTLN("Luminosité réglée à : " + String(param.luminosite));
+
+      // Réponse JSON pour confirmer la mise à jour
+      activeServer->send(200, "application/json", "{\"status\":\"success\"}");
+
+      delay(100);
+
+      modifJson("uint8_t", "luminosite", String(param.luminosite), PARAMETRE_FILE);
+      update_screen = true;
+    }
+    if(activeServer->arg("parametre") == "3") { // Synchronisation de l'heure
+      String timeParam = server.arg("time");
+
+      if(updateRTC(timeParam)) {
+          DEBUG_PRINTLN("RTC mis à jour avec succès !");
+          delay(100);
+          activeServer->send(200, "application/json", "{\"status\":\"success\"}");
+          update_screen = true;
+      } else {
+          DEBUG_PRINTLN("Format de date invalide !");
+          delay(100);
+          activeServer->send(200, "application/json", "{\"status\":\"error\"}");
+      }
+    }
+  }
+}
 
 void parametres(WebServer* clientServer) {   // Fonction automatique quand l'utilisateur changes les parametres wifi
   if(clientServer->hasArg("ssid")) {

@@ -57,7 +57,6 @@
     };
 
     String HHMM_actual = "9999";
-    bool update_screen = false;
     bool toggleSecondes = false; // Pour le clignotement des deux points
     int leds[NUM_LEDS];
     bool RTC_Updated = false;
