@@ -12,28 +12,38 @@ from pathlib import Path
 # Import pour PlatformIO
 Import("env")
 
-def get_firmware_version():
-    """Extrait la version du firmware depuis main.cpp"""
+def get_firmware_info():
+    """Extrait la version et le nom du firmware depuis main.cpp"""
     main_cpp_path = Path("src/main.cpp")
     
     if not main_cpp_path.exists():
         print("❌ Fichier main.cpp non trouvé")
-        return None
+        return None, None
     
     with open(main_cpp_path, 'r', encoding='utf-8') as file:
         content = file.read()
     
     # Recherche de la ligne String Dispo_version = "x.x.x";
     version_pattern = r'String\s+Dispo_version\s*=\s*"([^"]+)"\s*;'
-    match = re.search(version_pattern, content)
+    version_match = re.search(version_pattern, content)
     
-    if match:
-        version = match.group(1)
+    # Recherche de la ligne String Dispo_basename = "nom";
+    basename_pattern = r'String\s+Dispo_basename\s*=\s*"([^"]+)"\s*;'
+    basename_match = re.search(basename_pattern, content)
+    
+    version = version_match.group(1) if version_match else None
+    basename = basename_match.group(1) if basename_match else None
+    
+    if version and basename:
+        print(f"✅ Nom détecté : {basename}")
         print(f"✅ Version détectée : {version}")
-        return version
+        return basename, version
     else:
-        print("❌ Version non trouvée dans main.cpp")
-        return None
+        if not version:
+            print("❌ Version non trouvée dans main.cpp")
+        if not basename:
+            print("❌ Nom du dispositif non trouvé dans main.cpp")
+        return None, None
 
 def post_build_action(source, target, env):
     """Action post-build appelée par PlatformIO"""
@@ -41,10 +51,10 @@ def post_build_action(source, target, env):
     print(f"📍 Répertoire de travail : {Path.cwd()}")
     print(f"🎯 Target : {target[0]}")
     
-    # Obtenir la version
-    version = get_firmware_version()
-    if not version:
-        print("❌ Impossible d'obtenir la version")
+    # Obtenir le nom et la version
+    basename, version = get_firmware_info()
+    if not basename or not version:
+        print("❌ Impossible d'obtenir les informations du firmware")
         return
     
     # Créer le répertoire release s'il n'existe pas
@@ -55,7 +65,7 @@ def post_build_action(source, target, env):
     firmware_source = Path(str(target[0]))
     
     # Créer le nouveau nom de fichier
-    new_firmware_name = f"firmware_{version}.bin"
+    new_firmware_name = f"{basename}_{version}.bin"
     new_firmware_path = release_dir / new_firmware_name
     
     # Supprimer l'ancien fichier s'il existe et copier le nouveau

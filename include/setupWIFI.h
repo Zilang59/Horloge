@@ -758,15 +758,18 @@ void check_firmware_updates(WebServer* activeServer) {
         String payload = http.getString();
         DEBUG_PRINT("Payload reçu (premiers 200 chars) : ");
         DEBUG_PRINTLN(payload.length() > 200 ? payload.substring(0, 200) : payload);
+        DEBUG_PRINT("Recherche des fichiers avec le pattern : ");
+        DEBUG_PRINTLN(Dispo_basename + "_*.bin");
         
-        // Rechercher tous les fichiers firmware_*.bin dans la réponse
+        // Rechercher tous les fichiers {Dispo_basename}_*.bin dans la réponse
         String latestVersion = "";
         String latestFileName = "";
+        String searchPattern = "\"name\":\"" + Dispo_basename + "_";
         
         int pos = 0;
-        while ((pos = payload.indexOf("\"name\":\"firmware_", pos)) != -1) {
-            // Trouver le début de la version (après "firmware_")
-            int versionStart = payload.indexOf("firmware_", pos) + 9; // 9 = longueur de "firmware_"
+        while ((pos = payload.indexOf(searchPattern, pos)) != -1) {
+            // Trouver le début de la version (après "{Dispo_basename}_")
+            int versionStart = payload.indexOf(Dispo_basename + "_", pos) + Dispo_basename.length() + 1; // +1 pour le "_"
             int endPos = payload.indexOf(".bin\"", versionStart);
             if (endPos != -1 && versionStart < endPos) {
                 String version = payload.substring(versionStart, endPos);
@@ -779,7 +782,7 @@ void check_firmware_updates(WebServer* activeServer) {
                     // Comparer avec la version courante pour trouver la plus récente
                     if (latestVersion == "" || compareVersions(version, latestVersion)) {
                         latestVersion = version;
-                        latestFileName = "firmware_" + version + ".bin";
+                        latestFileName = Dispo_basename + "_" + version + ".bin";
                     }
                 }
             }
