@@ -35,7 +35,6 @@ Une horloge numérique connectée affichant l'heure sur des LED RGB, compatible 
 
 ## 📸 Galerie
 
-Consultez le dossier [`images/`](./images/) pour voir les photos des deux versions :
 - 🖥️ **Version bureau** : Horloge grande, fonctionnement 24/7
 - 📱 **Version portable** : Mini horloge compacte, batterie intégrée
 
