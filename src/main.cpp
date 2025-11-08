@@ -3,7 +3,7 @@
 
 // Variables générales
     String Dispo_basename = "Horloge_mini"; //Pas de caractères spéciaux, espaces...
-    String Dispo_version = "1.0.1"; // Version du code
+    String Dispo_version = "1.0.0"; // Version du code
     String Lien_OTA_Update = "https://github.com/Zilang59/Horloge/tree/main/release"; // Lien vers le dossier des releases de mises à jour OTA (laisser vide si pas de mise à jour)
     #define DEBUG  // Mets en commentaire cette ligne pour désactiver les Serial.print()
     // Commande pour éviter de voir des erreurs lié au fichier .h : pio init --ide vscode
@@ -21,8 +21,8 @@
   #include <setupWIFI.h>             // Gestion du Wi-Fi et du Hotspot
 
 // Include diverses
-  // #include <Horloge_grande.h>   // Choisissser le type d'horloge (grande ou mini)
-  #include <Horloge_Mini.h>  // Choisissser le type d'horloge (grande ou mini)
+  #include <Horloge_Mini.h>  // Choisissser le type d'horloge (grande ou mini)        /!\ Le mini utilise un ESP32 S3 il faut le changer dans le platformio.ini
+  // #include <Horloge_grande.h>   // Choisissser le type d'horloge (grande ou mini)  /!\ Il utilise un ESP Wroom 32 il faut le changer dans le platformio.ini
   #include <Infrarouge.h>   // Gestion du module infrarouge
   #include <RTC.h>   // Gestion du module RTC
   #include <LED_RGB.h>     // Gestion des LEDs choisir celui adapté au led (LED_RGB.h ou LED_RGBW.h) ou commenter pour ne pas utiliser
