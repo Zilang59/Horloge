@@ -35,17 +35,9 @@ Une horloge numérique connectée affichant l'heure sur des LED RGB, compatible 
 
 ## 📸 Galerie
 
-### Version Bureau - Horloge grande (24/7)
-<div align="center">
-  <img src="./images/horloge.png" alt="Version Bureau" width="400">
-  <p><i>Horloge bureau - Alimentation USB 5V permanente</i></p>
-</div>
-
-### Version Portable - Horloge compacte sur batterie
-<div align="center">
-  <img src="./images/Mini%20Horloge.jpg" alt="Version Portable" width="400">
-  <p><i>Mini horloge - Batterie rechargeable USB-C 5V</i></p>
-</div>
+Consultez le dossier [`images/`](./images/) pour voir les photos des deux versions :
+- 🖥️ **Version bureau** : Horloge grande, fonctionnement 24/7
+- 📱 **Version portable** : Mini horloge compacte, batterie intégrée
 
 ---
 
