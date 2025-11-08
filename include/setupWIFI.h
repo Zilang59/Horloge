@@ -341,6 +341,8 @@ void accueil(WebServer* activeServer) {
     html.replace("'%MENU_ADMIN%'", param.Admin_site ? "true" : "false");
 
     html.replace("%COULEUR%", String(param.couleur));
+    html.replace("%SENSORLIGHT%", param.CapteurLumiere ? "display:block" : "display:none");
+    html.replace("%LUMAUTO%", param.LumAuto ?  "checked='checked'" : "");
     html.replace("%LUMINOSITE%", String(param.luminosite));
 
   // Send le site web
@@ -435,6 +437,19 @@ void option(WebServer* activeServer) {
           delay(100);
           activeServer->send(200, "application/json", "{\"status\":\"error\"}");
       }
+    }
+    if(activeServer->arg("parametre") == "4") { // Switch Luminosité automatique ou manuelle
+      String lumauto = activeServer->arg("lumauto");
+      param.LumAuto = (lumauto == "1");
+      DEBUG_PRINTLN("Mode de luminosité : " + String(param.LumAuto ? "Automatique" : "Manuelle"));
+
+      // Réponse JSON pour confirmer la mise à jour
+      activeServer->send(200, "application/json", "{\"status\":\"success\"}");
+
+      delay(100);
+
+      modifJson("bool", "LumAuto", param.LumAuto ? "true" : "false", PARAMETRE_FILE);
+      update_screen = true;
     }
   }
 }

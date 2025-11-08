@@ -24,7 +24,7 @@
     String formatTime(uint16_t totalSeconds);
     String getDeviceKey();
 
-// Horloge_grande.h
+// Horloge_Mini.h
     void Loop_Ecran();
     void SetupPinout();
     void ShowHeure();
@@ -38,6 +38,7 @@
 // LED_RGB.h
     void LED_setup();
     void setLEDsWithBrightness(String hexColor, uint16_t ledIndices[], uint16_t numLeds, uint8_t brightness);
+    void updateBrightnessTransition();
 
 // RTC.h
     String readRTC();

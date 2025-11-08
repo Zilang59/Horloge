@@ -35,7 +35,7 @@
 
         
         <div class="section">
-            <h2>Gestion de la couleur</h2>
+            <h2>Couleur de l'affichage</h2>
             <div class="color-picker-container">
                 <!-- Afficheur 7 segments pour simuler l'horloge -->
                 <div class="seven-segment-display">
@@ -51,9 +51,17 @@
 
                 <span class="material-icons bouton icon-medium" title="synchroniser" id="synchronize_clock">upload</span>
             </div>
-
-            <div class="line">
-                <span class="label">Luminosité</span>
+        </div>
+        <div class="section">
+            <h2>Intensité lumineuse</h2>
+            <div class="line luminosite-section">
+                <div class="toggle-container" style="display:none;%SENSORLIGHT%;">
+                    <div class="toggle">
+                        <span>Manuelle</span>
+                        <input type="checkbox" id="toggleSwitch" %LUMAUTO% onchange="Changebouton();">
+                        <span>Automatique</span>
+                    </div>
+                </div>
                 <input type="range" id="luminosite" min="2" max="150" value="%LUMINOSITE%">
             </div>
         </div>

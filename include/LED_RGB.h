@@ -16,6 +16,14 @@ unsigned long previousMillis = 0;
 int base_interval = 10; // Intervalle de base pour la respiration
 int base_brightness = 128;
 
+// Variables pour la transition de luminosité lisse
+int currentBrightness = 128;      // Luminosité actuelle affichée
+int targetBrightness = 128;       // Luminosité cible
+int startBrightness = 128;        // Luminosité au début de la transition
+unsigned long brightnessTransitionStart = 0;
+const unsigned long BRIGHTNESS_TRANSITION_TIME = 2000; // Durée de transition en ms (2 secondes)
+// inTransition est défini dans Variables.h
+
 RgbColor hexToNeopixelbus(String hex) {
     if (hex.charAt(0) == '#') {
         hex.remove(0, 1);
@@ -52,29 +60,18 @@ void LED_setup() {
     ShowHeure();
 }
 
-/**
- * Définit une ou plusieurs LEDs à une couleur avec une luminosité spécifique
- * 
- * @param hexColor Couleur RGB (format "#RRGGBB")
- * @param ledIndices Tableau contenant les indices des LEDs à définir
- * @param numLeds Nombre d'éléments dans le tableau ledIndices
- * @param brightness Luminosité de 0 à 255 (0 = éteint, 255 = luminosité max)
- * 
- * Exemple :
- *   uint16_t leds[] = {0, 5, 10, 15};
- *   setLEDsWithBrightness("#FF0000", leds, 4, 200);  // Allume les LEDs 0,5,10,15 en rouge à 200/255
-*/
-void setLEDsWithBrightness(String hexColor, uint16_t ledIndices[], uint16_t numLeds, uint8_t brightness) {
+
+void setLEDsWithBrightness(String hexColor, uint16_t ledIndices[], uint16_t numLeds, uint8_t brightness) { // setLEDsWithBrightness("#FF0000", {0, 5, 10, 15}, 4, 200);
     // Limiter la luminosité entre 0 et 255
     brightness = constrain(brightness, 0, 255);
     
     // Convertir la couleur hexadécimale en RgbColor
     RgbColor color = hexToNeopixelbus(hexColor);
     
-    // Calculer les composantes de couleur ajustées par la luminosité
-    uint8_t r = (uint8_t)((color.R * brightness) / 255);
-    uint8_t g = (uint8_t)((color.G * brightness) / 255);
-    uint8_t b = (uint8_t)((color.B * brightness) / 255);
+    // Calculer les composantes de couleur ajustées par la luminosité actuelle (lissée)
+    uint8_t r = (uint8_t)((color.R * currentBrightness) / 255);
+    uint8_t g = (uint8_t)((color.G * currentBrightness) / 255);
+    uint8_t b = (uint8_t)((color.B * currentBrightness) / 255);
     
     RgbColor adjustedColor(r, g, b);
     
@@ -87,5 +84,41 @@ void setLEDsWithBrightness(String hexColor, uint16_t ledIndices[], uint16_t numL
     
     // Mettre à jour l'affichage
     strip.Show();
+}
+
+void updateBrightnessTransition() {
+    // Vérifier si la luminosité cible a changé
+    if (targetBrightness != param.luminosite) {
+        startBrightness = currentBrightness;  // Sauvegarder la luminosité actuelle
+        targetBrightness = param.luminosite;
+        brightnessTransitionStart = millis();
+        inTransition = true;
+    }
+    
+    // Si on a atteint la cible, terminer la transition
+    if (currentBrightness == targetBrightness) {
+        inTransition = false;
+        return;
+    }
+    
+    // Calculer le temps écoulé depuis le début de la transition
+    unsigned long elapsedTime = millis() - brightnessTransitionStart;
+    
+    // Si le temps de transition est dépassé, on a atteint la cible
+    if (elapsedTime >= BRIGHTNESS_TRANSITION_TIME) {
+        currentBrightness = targetBrightness;
+        inTransition = false;
+    } else {
+        // Interpolation linéaire de startBrightness vers targetBrightness
+        float progress = (float)elapsedTime / BRIGHTNESS_TRANSITION_TIME;
+        int newBrightness = (int)(startBrightness + (targetBrightness - startBrightness) * progress);
+        
+        // Seulement rafraîchir si la luminosité a vraiment changé
+        if (newBrightness != currentBrightness) {
+            currentBrightness = newBrightness;
+            update_screen = true;
+            ShowHeure();
+        }
+    }
 }
 

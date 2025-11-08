@@ -66,10 +66,26 @@
 
 void SetupPinout() {
     pinMode(PIN_LEDS, OUTPUT);
+
+    
+    if(param.CapteurLumiere) {
+        param.CapteurLumiere = false;
+        param.LumAuto = false;
+        modifJson("bool", "CapteurLumiere", param.CapteurLumiere ? "true" : "false", PARAMETRE_FILE);
+        modifJson("bool", "LumAuto", param.LumAuto ? "true" : "false", PARAMETRE_FILE);
+    }
 }
 
 void ShowHeure() {
-    String HHMM = readRTC();
+    String HHMM;
+    
+    // Ne lire le RTC que si on n'est pas en transition de luminosité
+    if (!inTransition) {
+        HHMM = readRTC();
+    } else {
+        HHMM = HHMM_actual;  // Garder l'heure actuelle pendant la transition
+    }
+
     if(HHMM != HHMM_actual || update_screen) {
         HHMM_actual = HHMM;
         update_screen = false;
@@ -83,6 +99,11 @@ void ShowHeure() {
             afficherChiffre(27, 2);
             afficherChiffre(27, 3);
             afficherChiffre(36, 4);
+        }
+
+        // Afficher les deux points pendant la transition
+        if (inTransition && toggleSecondes) {
+            afficherSecondes(100);
         }
     }
 }
@@ -106,7 +127,7 @@ void afficherChiffre(int chiffre, int digit) {
     for (int i = debut; i <= fin; i++) {
       ledsToErase[eraseCount++] = i;
     }
-    setLEDsWithBrightness("#000000", ledsToErase, eraseCount, 0);
+    if(!inTransition) setLEDsWithBrightness("#000000", ledsToErase, eraseCount, 0);
   
     // Allumer les LEDs correspondant au chiffre dans ce digit
     uint16_t ledsToLight[24]; // Tableau pour les LEDs à allumer

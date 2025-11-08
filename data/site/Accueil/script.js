@@ -137,3 +137,21 @@ function RefreshInfo() {
     }, 500);
   });
 
+// Choix de la gestion de la luminosité auto ou manuelle
+let toggleSwitch_initialValue = document.getElementById("toggleSwitch").checked;
+function Changebouton() {
+  const lumauto = document.getElementById("toggleSwitch").checked ? 1 : 0;
+  fetch("/option?parametre=4&lumauto="+ lumauto)
+    .then(response => response.json())
+    .then(data => {
+        if(data.status !== "success") {
+          setTimeout(() => { document.getElementById("toggleSwitch").checked = toggleSwitch_initialValue; }, 100);
+        } else {
+          toggleSwitch_initialValue = lumauto;
+        }
+    })
+    .catch(error => {
+        setTimeout(() => { document.getElementById("toggleSwitch").checked = toggleSwitch_initialValue; }, 100);
+    });
+}
+

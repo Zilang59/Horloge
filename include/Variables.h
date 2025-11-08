@@ -5,7 +5,8 @@
     X(String, Version, "1.0.0") \ 
     X(String, couleur, "#00FF00") \
     X(uint8_t, luminosite, 5) \
-    X(bool, LumAuto, true) \
+    X(bool, LumAuto, false) \
+    X(bool, CapteurLumiere, false) \
     X(String, light_mode, "normal") \
     X(bool, Admin_site, false)
 
@@ -37,3 +38,4 @@
 
 // Ajout d'autre variable globales ici si besoin
     bool update_screen = false; // Si true, l'écran sera rafraîchi à la prochaine boucle
+    bool inTransition = false;  // Si true, une transition de luminosité est en cours

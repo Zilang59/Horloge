@@ -295,6 +295,22 @@ input.color-input {
   margin: 8px 0;
 }
 
+.luminosite-section {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.luminosite-section .label {
+  margin-bottom: 5px;
+}
+
+.luminosite-section input[type="range"] {
+  width: 100%;
+  max-width: 250px;
+}
+
 .label {
   color : black;
 }

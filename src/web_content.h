@@ -308,6 +308,22 @@ input.color-input {
   margin: 8px 0;
 }
 
+.luminosite-section {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.luminosite-section .label {
+  margin-bottom: 5px;
+}
+
+.luminosite-section input[type="range"] {
+  width: 100%;
+  max-width: 250px;
+}
+
 .label {
   color : black;
 }
@@ -455,7 +471,7 @@ input:checked + .slider:before {
 
         
         <div class="section">
-            <h2>Gestion de la couleur</h2>
+            <h2>Couleur de l'affichage</h2>
             <div class="color-picker-container">
                 <!-- Afficheur 7 segments pour simuler l'horloge -->
                 <div class="seven-segment-display">
@@ -471,9 +487,17 @@ input:checked + .slider:before {
 
                 <span class="material-icons bouton icon-medium" title="synchroniser" id="synchronize_clock">upload</span>
             </div>
-
-            <div class="line">
-                <span class="label">Luminosité</span>
+        </div>
+        <div class="section">
+            <h2>Intensité lumineuse</h2>
+            <div class="line luminosite-section">
+                <div class="toggle-container" style="display:none;%SENSORLIGHT%;">
+                    <div class="toggle">
+                        <span>Manuelle</span>
+                        <input type="checkbox" id="toggleSwitch" %LUMAUTO% onchange="Changebouton();">
+                        <span>Automatique</span>
+                    </div>
+                </div>
                 <input type="range" id="luminosite" min="2" max="150" value="%LUMINOSITE%">
             </div>
         </div>
@@ -619,6 +643,24 @@ function RefreshInfo() {
         });
     }, 500);
   });
+
+// Choix de la gestion de la luminosité auto ou manuelle
+let toggleSwitch_initialValue = document.getElementById("toggleSwitch").checked;
+function Changebouton() {
+  const lumauto = document.getElementById("toggleSwitch").checked ? 1 : 0;
+  fetch("/option?parametre=4&lumauto="+ lumauto)
+    .then(response => response.json())
+    .then(data => {
+        if(data.status !== "success") {
+          setTimeout(() => { document.getElementById("toggleSwitch").checked = toggleSwitch_initialValue; }, 100);
+        } else {
+          toggleSwitch_initialValue = lumauto;
+        }
+    })
+    .catch(error => {
+        setTimeout(() => { document.getElementById("toggleSwitch").checked = toggleSwitch_initialValue; }, 100);
+    });
+}
 
 
 </script> <!-- Sera remplacé automatique par la page script.js de ce même répertoire -->

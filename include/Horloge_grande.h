@@ -52,7 +52,6 @@ const int caracteres_digit1[11][24] = {
     /*9*/ {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 20, 21, -1},
     /*rien*/ {-1}
 };
-
 const int caracteres_digit2[11][24] = {
     /*0*/ {25, 26, 27, 28, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39, 40, 41, 42, 43, -1},
     /*1*/ {31, 32, 33, 35, 36, 37, -1},
@@ -66,7 +65,6 @@ const int caracteres_digit2[11][24] = {
     /*9*/ {28, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46 -1},
     /*rien*/ {-1}
 };
-
 const int caracteres_digit3[11][24] = {
     /*0*/ {55, 56, 57, 58, 59, 60, 61, 62, 63, 65, 66, 67, 68, 69, 70, 71, 72, 73, -1},
     /*1*/ {55, 56, 57, 71, 72, 73, -1},
@@ -80,7 +78,6 @@ const int caracteres_digit3[11][24] = {
     /*9*/ {52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 68, 69, 70, 71, 72, 73 -1},
     /*rien*/ {-1}
 };
-
 const int caracteres_digit4[11][24] = {
     /*0*/ {77, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 91, 92, 93, 94, 95, -1},
     /*1*/ {83, 84, 85, 87, 88, 89, -1},
@@ -104,10 +101,23 @@ void SetupPinout() {
     pinMode(PIN_LEDS, OUTPUT);
     pinMode(PIN_INFRAROUGE, INPUT);
     pinMode(PIN_LUMINOSITE, INPUT);
+    
+    if(!param.CapteurLumiere) {
+        param.CapteurLumiere = true;
+        modifJson("bool", "CapteurLumiere", param.CapteurLumiere ? "true" : "false", PARAMETRE_FILE);
+    }
 }
 
 void ShowHeure() {
-    String HHMM = readRTC();
+    String HHMM;
+    
+    // Ne lire le RTC que si on n'est pas en transition de luminosité
+    if (!inTransition) {
+        HHMM = readRTC();
+    } else {
+        HHMM = HHMM_actual;  // Garder l'heure actuelle pendant la transition
+    }
+    
     if(HHMM != HHMM_actual || update_screen) {
         HHMM_actual = HHMM;
         update_screen = false;
@@ -121,6 +131,11 @@ void ShowHeure() {
             afficherChiffre(10, 2); // rien
             afficherChiffre(10, 3); // rien
             afficherChiffre(10, 4); // rien
+        }
+        
+        // Afficher les deux points pendant la transition
+        if (inTransition && toggleSecondes) {
+            afficherSecondes(100);
         }
     }
 }
@@ -163,7 +178,7 @@ void afficherChiffre(int chiffre, int digit) {
             ledsToErase[eraseCount++] = i;
         }
     }
-    setLEDsWithBrightness("#000000", ledsToErase, eraseCount, 0);
+    if(!inTransition) setLEDsWithBrightness("#000000", ledsToErase, eraseCount, 0);
   
     // Allumer les LEDs correspondant au chiffre dans ce digit
     uint16_t ledsToLight[24];
@@ -250,6 +265,53 @@ void Loop_Ecran() {
                 RTC_Updated = true;
             }
             if(minutes == "07" && RTC_Updated) { RTC_Updated = false; }
+        }
+    #endif
+
+    // Gestion de la luminosité automatique
+    #if defined(PIN_LUMINOSITE)
+        const int LUMINOSITY_SAMPLES = 10;           // Nombre de relevés pour la moyenne
+        const int LUMINOSITY_BRIGHT_THRESHOLD = 500; // Valeur capteur en lumière forte
+        const int LUMINOSITY_DARK_THRESHOLD = 4096;  // Valeur capteur en lumière très faible
+        const unsigned long LUMINOSITY_UPDATE_INTERVAL = 5000; // Mise à jour toutes les 5 secondes
+        const int LUMINOSITY_TOLERANCE = 10;         // Tolérance pour éviter les changements fréquents
+        
+        static unsigned long lastLuminosityUpdate = 0;
+        static unsigned long lastLuminosityCheck = 0;
+        static int luminositySamples[LUMINOSITY_SAMPLES] = {0};
+        static int sampleIndex = 0;
+        
+        if(param.LumAuto && param.CapteurLumiere) {
+            if (currentMillis - lastLuminosityCheck >= 500) { // Prendre un relevé toutes les 500ms
+                lastLuminosityCheck = currentMillis;
+                int sensorValue = analogRead(PIN_LUMINOSITE);
+                luminositySamples[sampleIndex] = sensorValue;
+                sampleIndex = (sampleIndex + 1) % LUMINOSITY_SAMPLES;
+            }
+            
+            // Calculer la moyenne et mettre à jour toutes les 5 secondes si param.LumAuto est true
+            if (currentMillis - lastLuminosityUpdate >= LUMINOSITY_UPDATE_INTERVAL) {
+                lastLuminosityUpdate = currentMillis;
+                
+                // Calculer la moyenne des 10 relevés
+                long sum = 0;
+                for (int i = 0; i < LUMINOSITY_SAMPLES; i++) {
+                    sum += luminositySamples[i];
+                }
+                int averageValue = sum / LUMINOSITY_SAMPLES;
+                
+                // Mapper la valeur du capteur (LUMINOSITY_BRIGHT_THRESHOLD à LUMINOSITY_DARK_THRESHOLD) 
+                // à une luminosité (250 à 10) - Plus la lumière ambiante est forte, plus la LED est lumineuse
+                int newLuminosity = map(averageValue, LUMINOSITY_BRIGHT_THRESHOLD, LUMINOSITY_DARK_THRESHOLD, 250, 10);
+                newLuminosity = constrain(newLuminosity, 10, 250);
+                
+                // Mettre à jour seulement si la différence est supérieure à la tolérance
+                if (abs(newLuminosity - param.luminosite) > LUMINOSITY_TOLERANCE) {
+                    param.luminosite = newLuminosity;
+                    modifJson("uint8_t", "luminosite", String(param.luminosite), PARAMETRE_FILE);
+                    update_screen = true;
+                }
+            }
         }
     #endif
 }

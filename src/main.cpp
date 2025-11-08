@@ -2,8 +2,8 @@
 #include <WebServer.h>
 
 // Variables générales
-    String Dispo_basename = "Horloge"; //Pas de caractères spéciaux, espaces...
-    String Dispo_version = "1.0.0"; // Version du code
+    String Dispo_basename = "Horloge_mini"; //Pas de caractères spéciaux, espaces...
+    String Dispo_version = "1.0.1"; // Version du code
     String Lien_OTA_Update = "https://github.com/Zilang59/Horloge/tree/main/release"; // Lien vers le dossier des releases de mises à jour OTA (laisser vide si pas de mise à jour)
     #define DEBUG  // Mets en commentaire cette ligne pour désactiver les Serial.print()
     // Commande pour éviter de voir des erreurs lié au fichier .h : pio init --ide vscode
@@ -21,8 +21,8 @@
   #include <setupWIFI.h>             // Gestion du Wi-Fi et du Hotspot
 
 // Include diverses
-  #include <Horloge_grande.h>   // Choisissser le type d'horloge (grande ou mini)
-  // #include <Horloge_Mini.h>  // Choisissser le type d'horloge (grande ou mini)
+  // #include <Horloge_grande.h>   // Choisissser le type d'horloge (grande ou mini)
+  #include <Horloge_Mini.h>  // Choisissser le type d'horloge (grande ou mini)
   #include <Infrarouge.h>   // Gestion du module infrarouge
   #include <RTC.h>   // Gestion du module RTC
   #include <LED_RGB.h>     // Gestion des LEDs choisir celui adapté au led (LED_RGB.h ou LED_RGBW.h) ou commenter pour ne pas utiliser
@@ -34,10 +34,6 @@ void setup() {
         Serial.begin(115200);
         delay(50);
     #endif
-
-  // Setup des inputs outputs
-      SetupPinout();
-      delay(10);
 
   // Setup du Real Time Clock
       setupRTC();
@@ -61,6 +57,11 @@ void setup() {
       DEBUG_PRINT("-----------------------------------------\n");
       delay(10);
     #endif
+
+    
+  // Setup des inputs outputs
+    SetupPinout();
+    delay(10);
 
     
   // Paramétrage de la LED
@@ -118,6 +119,11 @@ void loop() {
   // Gestion de l'infrarouge
     #if defined(PIN_INFRAROUGE)
       loop_Infrarouge();
+    #endif
+
+  // Gestion de la transition progressive de luminosité
+    #if defined(ledrgbH)
+      updateBrightnessTransition();
     #endif
 
   // Gestion de l'affichage de l'heure
