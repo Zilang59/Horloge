@@ -619,6 +619,8 @@ function RefreshInfo() {
         });
     }, 500);
   });
+
+
 </script> <!-- Sera remplacé automatique par la page script.js de ce même répertoire -->
 </body>
 </html>

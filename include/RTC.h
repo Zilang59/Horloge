@@ -91,6 +91,7 @@ bool updateRTC(String timeParam) {
     if(!RTCok) { return false; }
     
     int update_year, update_month, update_day, update_hour, update_minute, update_second;
+    DEBUG_PRINTLN("Données reçues : " + timeParam);
 
     if (sscanf(timeParam.c_str(), "%d-%d-%dT%d:%d:%d", &update_year, &update_month, &update_day, &update_hour, &update_minute, &update_second) == 6) {
       rtc.adjust(DateTime(update_year, update_month, update_day, update_hour, update_minute, update_second));
