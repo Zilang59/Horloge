@@ -439,7 +439,7 @@ void option(WebServer* activeServer) {
   }
 }
 
-void parametres(WebServer* clientServer) {   // Fonction automatique quand l'utilisateur changes les parametres wifi
+void parametres(WebServer* clientServer) {   // Fonction automatique quand l'utilisateur changes les paramètres wifi
   if(clientServer->hasArg("ssid")) {
     String ssid_to_modify = clientServer->arg("ssid");
 
