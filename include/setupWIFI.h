@@ -336,6 +336,7 @@ void accueil(WebServer* activeServer) {
     String DispoName = Dispo_basename + "_" + ID_MAC;
     html.replace("%DISPO_NAME%", DispoName);
     html.replace("%DISPLAY_MENU_ADMIN%", param.Admin_site ? "display:block;" : "display:none;");
+    html.replace("%MENU_ADMIN%", param.Admin_site ? "true" : "false");
 
   // Send le site web
     activeServer->setContentLength(html.length());
@@ -369,8 +370,11 @@ void informations(WebServer* activeServer) {
     html.replace("%DISPO_NAME%", DispoName);
     html.replace("%DISPO_BASENAME%", Dispo_basename);
     html.replace("%DISPLAY_MENU_ADMIN%", param.Admin_site ? "display:block;" : "display:none;");
-
-
+    html.replace("%MENU_ADMIN%", param.Admin_site ? "true" : "false");
+    
+    // Informations mémoire
+    String memorySummary = getMemorySummaryHTML();
+    html.replace("%MEMORY_SUMMARY%", memorySummary);
     
     html.replace("%VERSION_FIRMWARE%", param.Version);
 

@@ -9,6 +9,8 @@
 
 // DONOTTOUCH/setupSPIFFS.h
     String ReadParametreFile();
+    String getMemorySummaryHTML();
+    String getMemorySummaryJSON();
     bool setupSPIFFS();
     void deleteFile(const char* fileName);
     void modifJson(String type, String key, String newValue, String fileName);

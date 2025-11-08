@@ -215,6 +215,197 @@ void printMemorySummary() {
     
     Serial.print("====================\n\n");
 }
+String getMemorySummaryJSON() {
+  StaticJsonDocument<1024> doc;
+  
+  // === RAM ===
+  uint32_t heap_used = ESP.getHeapSize() - ESP.getFreeHeap();
+  uint32_t heap_free = ESP.getFreeHeap();
+  uint32_t heap_total = ESP.getHeapSize();
+  
+  JsonObject ram = doc.createNestedObject("ram");
+  ram["used_ko"] = String(heap_used / 1024.0, 2);
+  ram["total_ko"] = String(heap_total / 1024.0, 2);
+  ram["free_ko"] = String(heap_free / 1024.0, 2);
+  
+  // === PSRAM ===
+  if (psramFound()) {
+      uint32_t psram_used = ESP.getPsramSize() - ESP.getFreePsram();
+      uint32_t psram_free = ESP.getFreePsram();
+      uint32_t psram_total = ESP.getPsramSize();
+      
+      JsonObject psram = doc.createNestedObject("psram");
+      psram["used_mo"] = String(psram_used / (1024.0 * 1024), 2);
+      psram["total_mo"] = String(psram_total / (1024.0 * 1024), 2);
+      psram["free_mo"] = String(psram_free / (1024.0 * 1024), 2);
+      psram["available"] = true;
+  } else {
+      JsonObject psram = doc.createNestedObject("psram");
+      psram["available"] = false;
+  }
+
+  // === FLASH Partitions ===
+  const esp_partition_t* app0 = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_0, NULL);
+  const esp_partition_t* app1 = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, NULL);
+  const esp_partition_t* spiffs_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+  
+  // Déterminer quelle app est actuellement active
+  const char* active_app = "?";
+  esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  if (it != NULL) {
+      const esp_partition_t* partition = esp_partition_get(it);
+      if (partition->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_0) active_app = "App0";
+      else if (partition->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_1) active_app = "App1";
+      esp_partition_iterator_release(it);
+  }
+  
+  JsonObject ota = doc.createNestedObject("ota");
+  if (app0 && app1) {
+      ota["app0_mo"] = String(app0->size / (1024.0 * 1024), 2);
+      ota["app1_mo"] = String(app1->size / (1024.0 * 1024), 2);
+      ota["dual_ota"] = true;
+      ota["active_app"] = active_app;
+  } else if (app0) {
+      ota["app0_mo"] = String(app0->size / (1024.0 * 1024), 2);
+      ota["dual_ota"] = false;
+      ota["active_app"] = "App0";
+  } else {
+      ota["available"] = false;
+  }
+  
+  // === SPIFFS ===
+  JsonObject spiffs = doc.createNestedObject("spiffs");
+  if (spiffs_partition) {
+      if(spiffs_ready && SPIFFS.begin(true)) {
+          spiffs["used_mo"] = String(SPIFFS.usedBytes() / (1024.0 * 1024), 2);
+          spiffs["total_mo"] = String(SPIFFS.totalBytes() / (1024.0 * 1024), 2);
+          spiffs["free_mo"] = String((SPIFFS.totalBytes() - SPIFFS.usedBytes()) / (1024.0 * 1024), 2);
+          spiffs["mounted"] = true;
+      } else {
+          spiffs["mounted"] = false;
+      }
+      spiffs["available"] = true;
+  } else {
+      spiffs["available"] = false;
+  }
+  
+  // === CODE ===
+  uint32_t sketch_size = ESP.getSketchSize();
+  uint32_t sketch_partition = (app0) ? app0->size : sketch_size;
+  uint32_t sketch_free = sketch_partition - sketch_size;
+  
+  JsonObject code = doc.createNestedObject("code");
+  code["used_mo"] = String(sketch_size / (1024.0 * 1024), 2);
+  code["total_mo"] = String(sketch_partition / (1024.0 * 1024), 2);
+  code["free_mo"] = String(sketch_free / (1024.0 * 1024), 2);
+  
+  // === FLASH TOTALE ===
+  uint32_t flash_total = ESP.getFlashChipSize();
+  uint32_t flash_used = sketch_size;
+  if (spiffs_partition && spiffs_ready && SPIFFS.begin(true)) {
+      flash_used += SPIFFS.usedBytes();
+  }
+  
+  JsonObject total = doc.createNestedObject("total");
+  total["used_mo"] = String(flash_used / (1024.0 * 1024), 2);
+  total["total_mo"] = String(flash_total / (1024.0 * 1024), 2);
+  
+  String jsonString;
+  serializeJson(doc, jsonString);
+  return jsonString;
+}
+String getMemorySummaryHTML() {
+  String html = "";
+  
+  // === RAM ===
+  uint32_t heap_used = ESP.getHeapSize() - ESP.getFreeHeap();
+  uint32_t heap_free = ESP.getFreeHeap();
+  uint32_t heap_total = ESP.getHeapSize();
+  
+  html += "<div class='memory-item'>";
+  html += "<strong>RAM :</strong> " + String(heap_used / 1024.0, 2) + " / " + String(heap_total / 1024.0, 2) + " Ko";
+  html += " (" + String(heap_free / 1024.0, 2) + " Ko libre)";
+  html += "</div>";
+  
+  // === PSRAM ===
+  if (psramFound()) {
+      uint32_t psram_used = ESP.getPsramSize() - ESP.getFreePsram();
+      uint32_t psram_free = ESP.getFreePsram();
+      uint32_t psram_total = ESP.getPsramSize();
+      
+      html += "<div class='memory-item'>";
+      html += "<strong>PSRAM :</strong> " + String(psram_used / (1024.0 * 1024), 2) + " / " + String(psram_total / (1024.0 * 1024), 2) + " Mo";
+      html += " (" + String(psram_free / (1024.0 * 1024), 2) + " Mo libre)";
+      html += "</div>";
+  }
+
+  // === FLASH Partitions ===
+  const esp_partition_t* app0 = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_0, NULL);
+  const esp_partition_t* app1 = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, NULL);
+  const esp_partition_t* spiffs_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+  
+  // Déterminer quelle app est actuellement active
+  const char* active_app = "?";
+  esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  if (it != NULL) {
+      const esp_partition_t* partition = esp_partition_get(it);
+      if (partition->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_0) active_app = "App0";
+      else if (partition->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_1) active_app = "App1";
+      esp_partition_iterator_release(it);
+  }
+  
+  html += "<div class='memory-item'>";
+  if (app0 && app1) {
+      // Afficher App0 et App1 avec couleur verte pour l'actif
+      String app0_color = (String(active_app) == "App0") ? "style='color: #115c11;'" : "";
+      String app1_color = (String(active_app) == "App1") ? "style='color: #115c11;'" : "";
+      
+      html += "<strong>OTA :</strong> <span " + app0_color + ">App0=" + String(app0->size / (1024.0 * 1024), 2) + " Mo</span>";
+      html += " + <span " + app1_color + ">App1=" + String(app1->size / (1024.0 * 1024), 2) + " Mo</span>";
+  } else if (app0) {
+      html += "<strong>OTA :</strong> App0=" + String(app0->size / (1024.0 * 1024), 2) + " Mo";
+  } else {
+      html += "<strong>OTA :</strong> NON DISPONIBLE";
+  }
+  html += "</div>";
+  
+  // === SPIFFS ===
+  html += "<div class='memory-item'>";
+  if (spiffs_partition) {
+      if(spiffs_ready && SPIFFS.begin(true)) {
+          html += "<strong>SPIFFS :</strong> " + String(SPIFFS.usedBytes() / (1024.0 * 1024), 2) + " / " + String(SPIFFS.totalBytes() / (1024.0 * 1024), 2) + " Mo";
+          html += " (" + String((SPIFFS.totalBytes() - SPIFFS.usedBytes()) / (1024.0 * 1024), 2) + " Mo libre)";
+      } else {
+          html += "<strong>SPIFFS :</strong> <span style='color: #ff6600;'>NON MONTE</span>";
+      }
+  } else {
+      html += "<strong>SPIFFS :</strong> <span style='color: #ff0000;'>NON DISPONIBLE</span>";
+  }
+  html += "</div>";
+  
+  // === CODE ===
+  uint32_t sketch_size = ESP.getSketchSize();
+  uint32_t sketch_partition = (app0) ? app0->size : sketch_size;
+  uint32_t sketch_free = sketch_partition - sketch_size;
+  
+  html += "<div class='memory-item'>";
+  html += "<strong>CODE :</strong> " + String(sketch_size / (1024.0 * 1024), 2) + " / " + String(sketch_partition / (1024.0 * 1024), 2) + " Mo";
+  html += " (" + String(sketch_free / (1024.0 * 1024), 2) + " Mo libre)";
+  html += "</div>";
+  
+  // === FLASH TOTALE ===
+  uint32_t flash_total = ESP.getFlashChipSize();
+  uint32_t flash_used = sketch_size;
+  if (spiffs_partition && spiffs_ready && SPIFFS.begin(true)) {
+      flash_used += SPIFFS.usedBytes();
+  }
+  
+  html += "<div class='memory-item'>";
+  html += "<strong>TOTAL :</strong> " + String(flash_used / (1024.0 * 1024), 2) + " / " + String(flash_total / (1024.0 * 1024), 2) + " Mo";
+  html += "</div>";
+  
+  return html;
+}
 
 void modifJson(String type, String key, String newValue, String fileName) {
   if(spiffs_ready == false) {
