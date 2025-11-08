@@ -2,9 +2,9 @@
 #include <WebServer.h>
 
 // Variables générales
-    String Dispo_basename = "Nom_du_projet"; //Pas de caractere speciaux, espaces...
+    String Dispo_basename = "Horloge"; //Pas de caractères spéciaux, espaces...
     String Dispo_version = "1.0.0"; // Version du code
-    String Lien_OTA_Update = ""; // Lien vers le dossier des releases de mises à jour OTA (laisser vide si pas de mise à jour)
+    String Lien_OTA_Update = "https://github.com/Zilang59/Horloge/tree/main/release"; // Lien vers le dossier des releases de mises à jour OTA (laisser vide si pas de mise à jour)
     #define DEBUG  // Mets en commentaire cette ligne pour désactiver les Serial.print()
     // Commande pour éviter de voir des erreurs lié au fichier .h : pio init --ide vscode
 
@@ -13,16 +13,19 @@
 // Include Généraux
   #include <DONOTTOUCH/VariablesGlobales.h>
   #include <Variables.h>
-  // #include <LED_RGB.h>     // Gestion des LEDs choisir celui adapté au led (LED_RGB.h ou LED_RGBW.h) ou commenter pour ne pas utiliser
+  #include <LED_RGB.h>     // Gestion des LEDs choisir celui adapté au led (LED_RGB.h ou LED_RGBW.h) ou commenter pour ne pas utiliser
   #include "AllFunction.h" // Fichier généré automatiquement pour éviter les erreurs de "fonction non déclarées"
-  // #include "DONOTTOUCH/setupSPIFFS.h"   // Gestion du système de fichier SPIFFS
-  // #include "DONOTTOUCH/OTA_Update.h"    // Gestion des mises à jour OTA (setupWIFI.H doit etre activé)
+  #include "DONOTTOUCH/setupSPIFFS.h"   // Gestion du système de fichier SPIFFS
+  #include "DONOTTOUCH/OTA_Update.h"    // Gestion des mises à jour OTA (setupWIFI.H doit etre activé)
   #include "Fonctions.h"                // Include diverses fonctions utiles
-  // #include <pinout.h>                  // Gestion des pins (setupWIFI.H doit etre activé)
+  // #include <pinout.h>                  // Gestion des pins
   // #include <Alexa.h>                 // Utilisation de Alexa (setupWIFI.H doit etre activé)
-  // #include <setupWIFI.h>             // Gestion du Wi-Fi et du Hotspot
+  #include <setupWIFI.h>             // Gestion du Wi-Fi et du Hotspot
 
 // Include diverses
+  #include <RTC.h>   // Gestion du module RTC
+  #include <Horloge_grande.h>   // Choisissser le type d'horloge (grande ou mini)
+  // #include <Horloge_Mini.h>  // Choisissser le type d'horloge (grande ou mini)
 
 void setup() {
   // Initialisation de la communication série
