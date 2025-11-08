@@ -181,14 +181,17 @@ void Loop_Ecran() {
 
 
 
-    // Mise a jour du RTC tous les jour à la même heure
+    // Mise a jour du RTC toutes les heures
     #if defined(setupWifiH)
         if(IsConnectedToWifi && RTCok) {
-            if(HHMM_actual == "0400" && !RTC_Updated) {
+            // Extraire les minutes de HHMM_actual (ex: "1435" -> "35")
+            String minutes = HHMM_actual.substring(2, 4);
+            
+            if(minutes == "05" && !RTC_Updated) {
                 UpdateHeure();
                 RTC_Updated = true;
             }
-            if(HHMM_actual == "0402" && RTC_Updated) { RTC_Updated = false; }
+            if(minutes == "07" && RTC_Updated) { RTC_Updated = false; }
         }
     #endif
 }
