@@ -1,0 +1,14 @@
+{
+    "wifi_networks": [
+      {
+        "ssid": "0",
+        "mdp": "0",
+        "hostname": "Nom_du_projet",
+        "IP_local": "0",
+        "DNS": "0",
+        "mDNS": "Nom_du_projet.local",
+        "port": "80"
+      }
+    ]
+  }
+  
