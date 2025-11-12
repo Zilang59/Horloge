@@ -24,7 +24,7 @@
     String formatTime(uint16_t totalSeconds);
     String getDeviceKey();
 
-// Horloge_grande.h
+// Horloge_Mini.h
     void Loop_Ecran();
     void SetupPinout();
     void ShowHeure();
