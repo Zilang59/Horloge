@@ -190,6 +190,7 @@ bool loop_Wifi() {
     server.handleClient();
     
     if (hotspotActive) {
+        dnsServer.processNextRequest();
         hotspot.handleClient();       // hotspot toujours actif
     }
 
@@ -211,6 +212,7 @@ bool loop_Wifi() {
       DEBUG_PRINTLN("Hotspot activé (pas de WiFi)");
     }
     
+    dnsServer.processNextRequest();
     hotspot.handleClient();
   }
 
@@ -425,7 +427,7 @@ void option(WebServer* activeServer) {
       update_screen = true;
     }
     if(activeServer->arg("parametre") == "3") { // Synchronisation de l'heure
-      String timeParam = server.arg("time");
+      String timeParam = activeServer->arg("time");
 
       if(updateRTC(timeParam)) {
           DEBUG_PRINTLN("RTC mis à jour avec succès !");
