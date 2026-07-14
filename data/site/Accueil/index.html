@@ -62,7 +62,47 @@
                         <span>Automatique</span>
                     </div>
                 </div>
-                <input type="range" id="luminosite" min="2" max="150" value="%LUMINOSITE%">
+                <div id="manualLuminosityControl" class="luminosity-control" style="%LUMAUTO_DISPLAY%">
+                    <input type="range" id="luminosite" min="2" max="150" value="%LUMINOSITE%">
+                </div>
+                <div id="sensorLuminosityControl" class="luminosity-control sensor-range-control" style="%LUMSENSOR_DISPLAY%">
+                    <div class="sensor-current">Actuel : <span id="luminositeSensorValue">--</span></div>
+                    <div class="dual-range" id="luminosityDetectionRange">
+                        <div class="dual-range-track"></div>
+                        <div class="dual-range-selection" id="luminosityDetectionSelection"></div>
+                        <div class="dual-range-current" id="luminositySensorMarker"></div>
+                        <input type="range" id="luminositeDetectionMin" min="0" max="4096" value="%LUMINOSITE_DETECTION_MIN%" aria-label="Detection min">
+                        <input type="range" id="luminositeDetectionMax" min="0" max="4096" value="%LUMINOSITE_DETECTION_MAX%" aria-label="Detection max">
+                    </div>
+                    <div class="dual-range-values">
+                        <span>Min <b id="luminositeDetectionMinValue">%LUMINOSITE_DETECTION_MIN%</b></span>
+                        <span>Max <b id="luminositeDetectionMaxValue">%LUMINOSITE_DETECTION_MAX%</b></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Heure ete / hiver</h2>
+            <div class="line luminosite-section">
+                <div class="toggle-container">
+                    <div class="toggle">
+                        <span>Manuelle</span>
+                        <input type="checkbox" id="heureEteAutoSwitch" %HEURE_ETE_AUTO% onchange="ChangeHeureEteAuto();">
+                        <span>Automatique</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Affichage</h2>
+            <div class="line luminosite-section">
+                <div class="toggle-container">
+                    <div class="toggle">
+                        <span>Normal</span>
+                        <input type="checkbox" id="affichageInverseSwitch" %AFFICHAGE_INVERSE% onchange="ChangeAffichageInverse();">
+                        <span>Inverse</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

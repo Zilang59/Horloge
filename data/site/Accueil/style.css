@@ -311,6 +311,127 @@ input.color-input {
   max-width: 250px;
 }
 
+.luminosity-control {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sensor-range-control {
+  max-width: 320px;
+}
+
+.sensor-current,
+.dual-range-values {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sensor-current {
+  justify-content: center;
+}
+
+.dual-range {
+  position: relative;
+  width: 100%;
+  height: 34px;
+}
+
+.dual-range-track,
+.dual-range-selection {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 6px;
+  border-radius: 6px;
+}
+
+.dual-range-track {
+  background: #d2d2d2;
+}
+
+.dual-range-selection {
+  background: #4CAF50;
+}
+
+.dual-range-current {
+  position: absolute;
+  top: 6px;
+  width: 2px;
+  height: 22px;
+  background: #111;
+  transform: translateX(-1px);
+  pointer-events: none;
+  display: none;
+}
+
+.dual-range-current.visible {
+  display: block;
+}
+
+.saved-feedback {
+  animation: savedPulse 0.55s ease;
+}
+
+.dual-range.saved-feedback .dual-range-selection,
+input.saved-feedback::-webkit-slider-thumb,
+input.saved-feedback::-moz-range-thumb,
+.toggle input.saved-feedback[type="checkbox"] {
+  animation: savedPulse 0.55s ease;
+}
+
+@keyframes savedPulse {
+  0%, 100% { box-shadow: none; }
+  35% { box-shadow: 0 0 0 5px rgba(76, 175, 80, 0.35); }
+}
+
+.dual-range input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+  appearance: none;
+}
+
+.dual-range input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #222;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.dual-range input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #222;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.dual-range input[type="range"]::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+.dual-range input[type="range"]::-moz-range-track {
+  background: transparent;
+}
+
 .label {
   color : black;
 }

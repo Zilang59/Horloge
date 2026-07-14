@@ -24,7 +24,7 @@
     String formatTime(uint16_t totalSeconds);
     String getDeviceKey();
 
-// Horloge_grande.h
+// Horloge_Mini.h
     void Loop_Ecran();
     void SetupPinout();
     void ShowHeure();
@@ -42,10 +42,19 @@
 
 // RTC.h
     String readRTC();
+    bool fetchHttpDateTime(DateTime& localDateTime);
+    bool isFrenchSummerTime(const DateTime& dateTime);
+    bool parseHttpDateHeader(const String& dateHeader, DateTime& localDateTime);
     bool updateRTC(String timeParam);
     int extractInt(String json, const char* key);
+    int lastSundayOfMonth(int year, int month);
+    int monthIndexFromEnglishName(const String& monthName);
+    int64_t daysFromCivil(int year, unsigned month, unsigned day);
     void UpdateHeure();
+    void applyInternetDateTime(const DateTime& internetTime, const char* sourceName);
+    void handleFrenchSummerTimeChange();
     void setupRTC();
+    void syncSummerTimeFlag();
 
 // Variables.h
     struct Parametres;
@@ -62,6 +71,7 @@
     void check_firmware_updates(WebServer* activeServer);
     void gestion_wifi(WebServer* activeServer);
     void informations(WebServer* activeServer);
+    void luminosity_sensor(WebServer* activeServer);
     void option(WebServer* activeServer);
     void parameter_info(WebServer* activeServer);
     void parametres(WebServer* clientServer);

@@ -2,10 +2,15 @@
 
 // Définition centralisée des paramètres enregistrées dans le SPIFFS (utiliser dans le script param.nomdelavariable)
     #define PARAM_LIST \
-    X(String, Version, "1.0.0") \ 
+    X(String, Version, "1.0.1") \
     X(String, couleur, "#00FF00") \
     X(uint8_t, luminosite, 5) \
     X(bool, LumAuto, false) \
+    X(uint16_t, LuminositeDetectionMin, 500) \
+    X(uint16_t, LuminositeDetectionMax, 4096) \
+    X(bool, HeureEteAuto, true) \
+    X(bool, HeureEte, false) \
+    X(bool, AffichageInverse, false) \
     X(bool, CapteurLumiere, false) \
     X(String, light_mode, "normal") \
     X(bool, Admin_site, false)

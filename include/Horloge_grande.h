@@ -4,7 +4,9 @@
     #define PIN_LEDS 13
     #define NUM_LEDS 99
     #define PIN_INFRAROUGE 15
-    #define PIN_LUMINOSITE 32
+    #ifndef PIN_LUMINOSITE
+      #define PIN_LUMINOSITE 32
+    #endif
     #define LED_TYPE WS2812B  // Type de LEDs
     #define COLOR_ORDER GRB   // Ordre des couleurs
 
@@ -97,6 +99,20 @@ bool toggleSecondes = false; // Pour le clignotement des deux points
 int leds[NUM_LEDS];
 bool RTC_Updated = false;
 
+bool isHiddenLed(int ledIndex) {
+    return ledIndex == 12 || ledIndex == 22 || ledIndex == 23 || ledIndex == 24 ||
+           ledIndex == 34 || ledIndex == 47 || ledIndex == 48 || ledIndex == 49 ||
+           ledIndex == 50 || ledIndex == 51 || ledIndex == 64 || ledIndex == 74 ||
+           ledIndex == 75 || ledIndex == 76 || ledIndex == 86;
+}
+
+bool segmentContainsLed(const int* segments, int ledIndex) {
+    for (int i = 0; segments[i] != -1; i++) {
+        if (segments[i] == ledIndex) return true;
+    }
+    return false;
+}
+
 void SetupPinout() {
     pinMode(PIN_LEDS, OUTPUT);
     pinMode(PIN_INFRAROUGE, INPUT);
@@ -179,19 +195,23 @@ void afficherChiffre(int chiffre, int digit) {
         }
     }
     if(!inTransition) setLEDsWithBrightness("#000000", ledsToErase, eraseCount, 0);
+    if (chiffre == 10) return;
   
     // Allumer les LEDs correspondant au chiffre dans ce digit
     uint16_t ledsToLight[24];
     int ledCount = 0;
-    for (int i = 0; segments[i] != -1 && ledCount < 24; i++) {
-        int ledIndex = segments[i];
-        // Vérifier que l'index est dans l'intervalle et n'est pas une LED cachée ou des deux points
-        if (ledIndex >= debut && ledIndex <= fin && 
-            ledIndex != 12 && ledIndex != 22 && ledIndex != 23 && ledIndex != 24 && 
-            ledIndex != 34 && ledIndex != 47 && ledIndex != 48 && ledIndex != 49 && 
-            ledIndex != 50 && ledIndex != 51 && ledIndex != 64 && ledIndex != 74 && 
-            ledIndex != 75 && ledIndex != 76 && ledIndex != 86) {
-            ledsToLight[ledCount++] = ledIndex;
+    if (param.AffichageInverse) {
+        for (int i = debut; i <= fin && ledCount < 24; i++) {
+            if (!isHiddenLed(i) && !segmentContainsLed(segments, i)) {
+                ledsToLight[ledCount++] = i;
+            }
+        }
+    } else {
+        for (int i = 0; segments[i] != -1 && ledCount < 24; i++) {
+            int ledIndex = segments[i];
+            if (ledIndex >= debut && ledIndex <= fin && !isHiddenLed(ledIndex)) {
+                ledsToLight[ledCount++] = ledIndex;
+            }
         }
     }
   
@@ -271,8 +291,6 @@ void Loop_Ecran() {
     // Gestion de la luminosité automatique
     #if defined(PIN_LUMINOSITE)
         const int LUMINOSITY_SAMPLES = 10;           // Nombre de relevés pour la moyenne
-        const int LUMINOSITY_BRIGHT_THRESHOLD = 500; // Valeur capteur en lumière forte
-        const int LUMINOSITY_DARK_THRESHOLD = 4096;  // Valeur capteur en lumière très faible
         const unsigned long LUMINOSITY_UPDATE_INTERVAL = 5000; // Mise à jour toutes les 5 secondes
         const int LUMINOSITY_TOLERANCE = 10;         // Tolérance pour éviter les changements fréquents
         
@@ -302,7 +320,9 @@ void Loop_Ecran() {
                 
                 // Mapper la valeur du capteur (LUMINOSITY_BRIGHT_THRESHOLD à LUMINOSITY_DARK_THRESHOLD) 
                 // à une luminosité (250 à 10) - Plus la lumière ambiante est forte, plus la LED est lumineuse
-                int newLuminosity = map(averageValue, LUMINOSITY_BRIGHT_THRESHOLD, LUMINOSITY_DARK_THRESHOLD, 250, 10);
+                                int detectionMin = min((int)param.LuminositeDetectionMin, (int)param.LuminositeDetectionMax - 1);
+                int detectionMax = max((int)param.LuminositeDetectionMax, (int)param.LuminositeDetectionMin + 1);
+                int newLuminosity = map(averageValue, detectionMin, detectionMax, 250, 10);
                 newLuminosity = constrain(newLuminosity, 10, 250);
                 
                 // Mettre à jour seulement si la différence est supérieure à la tolérance

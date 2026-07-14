@@ -474,7 +474,7 @@ String ReadParametreFile() {
   File file = SPIFFS.open(PARAMETRE_FILE, "r");
   if (!file) return "{}";  // si le fichier n’existe pas
 
-  StaticJsonDocument<200> doc;
+  StaticJsonDocument<512> doc;
   DeserializationError error = deserializeJson(doc, file);
   file.close();
   if (error) return "{}";

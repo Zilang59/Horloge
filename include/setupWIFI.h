@@ -8,6 +8,10 @@
 
 #define setupWifiH true
 
+#ifndef PIN_LUMINOSITE
+  #define PIN_LUMINOSITE 32
+#endif
+
 #include "web_content.h" // Generation des variables contenant le site web ce fichier est généré lors du build, pas de panique si il y a une erreur sur cette ligne avant le premier build
 
 const byte DNS_PORT = 53;
@@ -233,6 +237,7 @@ void startWebServer() {
   server.on("/option", HTTP_GET, [&](){ option(&server); });
   server.on("/parametres", HTTP_GET, [&](){ parametres(&server); });
   server.on("/parameter_info", HTTP_GET, [&](){ parameter_info(&server); });
+  server.on("/luminosity_sensor", HTTP_GET, [&](){ luminosity_sensor(&server); });
   server.on("/resetparam", HTTP_GET, resetPARAMETRE);
   server.on("/check_updates", HTTP_GET, [&](){ check_firmware_updates(&server); });
   server.on("/update_firmware", HTTP_GET, [&](){ update_firmware(&server); });
@@ -290,6 +295,7 @@ void setupHotspot() {
   hotspot.on("/option", HTTP_GET, [&](){ option(&hotspot); });
   hotspot.on("/parametres", HTTP_GET, [&](){ parametres(&hotspot); });
   hotspot.on("/parameter_info", HTTP_GET, [&](){ parameter_info(&hotspot); });
+  hotspot.on("/luminosity_sensor", HTTP_GET, [&](){ luminosity_sensor(&hotspot); });
   hotspot.on("/reset", HTTP_GET, resetESP);
   hotspot.on("/resetparam", HTTP_GET, resetPARAMETRE);
   hotspot.on("/restart", HTTP_GET, []() {
@@ -345,7 +351,13 @@ void accueil(WebServer* activeServer) {
     html.replace("%COULEUR%", String(param.couleur));
     html.replace("%SENSORLIGHT%", param.CapteurLumiere ? "display:block" : "display:none");
     html.replace("%LUMAUTO%", param.LumAuto ?  "checked='checked'" : "");
+    html.replace("%HEURE_ETE_AUTO%", param.HeureEteAuto ?  "checked='checked'" : "");
+    html.replace("%AFFICHAGE_INVERSE%", param.AffichageInverse ?  "checked='checked'" : "");
     html.replace("%LUMINOSITE%", String(param.luminosite));
+    html.replace("%LUMAUTO_DISPLAY%", param.LumAuto ? "display:none;" : "display:flex;");
+    html.replace("%LUMSENSOR_DISPLAY%", (param.LumAuto && param.Admin_site) ? "display:flex;" : "display:none;");
+    html.replace("%LUMINOSITE_DETECTION_MIN%", String(param.LuminositeDetectionMin));
+    html.replace("%LUMINOSITE_DETECTION_MAX%", String(param.LuminositeDetectionMax));
 
   // Send le site web
     activeServer->setContentLength(html.length());
@@ -451,6 +463,50 @@ void option(WebServer* activeServer) {
       delay(100);
 
       modifJson("bool", "LumAuto", param.LumAuto ? "true" : "false", PARAMETRE_FILE);
+      update_screen = true;
+    }
+    if(activeServer->arg("parametre") == "5") { // Switch heure ete/hiver automatique
+      String heureEteAuto = activeServer->arg("heureeteauto");
+      param.HeureEteAuto = (heureEteAuto == "1");
+      DEBUG_PRINTLN("Heure ete/hiver automatique : " + String(param.HeureEteAuto ? "Activee" : "Desactivee"));
+
+      activeServer->send(200, "application/json", "{\"status\":\"success\"}");
+
+      delay(100);
+
+      modifJson("bool", "HeureEteAuto", param.HeureEteAuto ? "true" : "false", PARAMETRE_FILE);
+      syncSummerTimeFlag();
+    }
+    if(activeServer->arg("parametre") == "6") { // Switch affichage normal ou inverse
+      String affichageInverse = activeServer->arg("affichageinverse");
+      param.AffichageInverse = (affichageInverse == "1");
+      DEBUG_PRINTLN("Affichage inverse : " + String(param.AffichageInverse ? "Active" : "Desactive"));
+
+      activeServer->send(200, "application/json", "{\"status\":\"success\"}");
+
+      delay(100);
+
+      modifJson("bool", "AffichageInverse", param.AffichageInverse ? "true" : "false", PARAMETRE_FILE);
+      update_screen = true;
+    }
+    if(activeServer->arg("parametre") == "7") { // Seuils du capteur de luminosite
+      uint16_t detectionMin = constrain(activeServer->arg("min").toInt(), 0, 4095);
+      uint16_t detectionMax = constrain(activeServer->arg("max").toInt(), 1, 4096);
+
+      if (detectionMin >= detectionMax) {
+        activeServer->send(200, "application/json", "{\"status\":\"error\"}");
+        return;
+      }
+
+      param.LuminositeDetectionMin = detectionMin;
+      param.LuminositeDetectionMax = detectionMax;
+
+      activeServer->send(200, "application/json", "{\"status\":\"success\"}");
+
+      delay(100);
+
+      modifJson("uint16_t", "LuminositeDetectionMin", String(param.LuminositeDetectionMin), PARAMETRE_FILE);
+      modifJson("uint16_t", "LuminositeDetectionMax", String(param.LuminositeDetectionMax), PARAMETRE_FILE);
       update_screen = true;
     }
   }
@@ -657,6 +713,22 @@ void parameter_info(WebServer* activeServer) {
   DEBUG_PRINTLN("Demande de parametre depuis la page d'accueil du site");
   String data = ReadParametreFile();
   activeServer->send(200, "application/json", data);
+}
+void luminosity_sensor(WebServer* activeServer) {
+  #if defined(PIN_LUMINOSITE)
+    long sum = 0;
+    const int sampleCount = 4;
+
+    for (int i = 0; i < sampleCount; i++) {
+      sum += analogRead(PIN_LUMINOSITE);
+      delay(2);
+    }
+
+    int value = sum / sampleCount;
+    activeServer->send(200, "application/json", "{\"status\":\"success\",\"value\":" + String(value) + "}");
+  #else
+    activeServer->send(200, "application/json", "{\"status\":\"error\"}");
+  #endif
 }
 void admin_site(WebServer* activeServer) {
   if(activeServer->hasArg("admin")) {

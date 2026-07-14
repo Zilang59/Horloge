@@ -324,6 +324,127 @@ input.color-input {
   max-width: 250px;
 }
 
+.luminosity-control {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sensor-range-control {
+  max-width: 320px;
+}
+
+.sensor-current,
+.dual-range-values {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sensor-current {
+  justify-content: center;
+}
+
+.dual-range {
+  position: relative;
+  width: 100%;
+  height: 34px;
+}
+
+.dual-range-track,
+.dual-range-selection {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 6px;
+  border-radius: 6px;
+}
+
+.dual-range-track {
+  background: #d2d2d2;
+}
+
+.dual-range-selection {
+  background: #4CAF50;
+}
+
+.dual-range-current {
+  position: absolute;
+  top: 6px;
+  width: 2px;
+  height: 22px;
+  background: #111;
+  transform: translateX(-1px);
+  pointer-events: none;
+  display: none;
+}
+
+.dual-range-current.visible {
+  display: block;
+}
+
+.saved-feedback {
+  animation: savedPulse 0.55s ease;
+}
+
+.dual-range.saved-feedback .dual-range-selection,
+input.saved-feedback::-webkit-slider-thumb,
+input.saved-feedback::-moz-range-thumb,
+.toggle input.saved-feedback[type="checkbox"] {
+  animation: savedPulse 0.55s ease;
+}
+
+@keyframes savedPulse {
+  0%, 100% { box-shadow: none; }
+  35% { box-shadow: 0 0 0 5px rgba(76, 175, 80, 0.35); }
+}
+
+.dual-range input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+  appearance: none;
+}
+
+.dual-range input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #222;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.dual-range input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #222;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.dual-range input[type="range"]::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+.dual-range input[type="range"]::-moz-range-track {
+  background: transparent;
+}
+
 .label {
   color : black;
 }
@@ -498,7 +619,47 @@ input:checked + .slider:before {
                         <span>Automatique</span>
                     </div>
                 </div>
-                <input type="range" id="luminosite" min="2" max="150" value="%LUMINOSITE%">
+                <div id="manualLuminosityControl" class="luminosity-control" style="%LUMAUTO_DISPLAY%">
+                    <input type="range" id="luminosite" min="2" max="150" value="%LUMINOSITE%">
+                </div>
+                <div id="sensorLuminosityControl" class="luminosity-control sensor-range-control" style="%LUMSENSOR_DISPLAY%">
+                    <div class="sensor-current">Actuel : <span id="luminositeSensorValue">--</span></div>
+                    <div class="dual-range" id="luminosityDetectionRange">
+                        <div class="dual-range-track"></div>
+                        <div class="dual-range-selection" id="luminosityDetectionSelection"></div>
+                        <div class="dual-range-current" id="luminositySensorMarker"></div>
+                        <input type="range" id="luminositeDetectionMin" min="0" max="4096" value="%LUMINOSITE_DETECTION_MIN%" aria-label="Detection min">
+                        <input type="range" id="luminositeDetectionMax" min="0" max="4096" value="%LUMINOSITE_DETECTION_MAX%" aria-label="Detection max">
+                    </div>
+                    <div class="dual-range-values">
+                        <span>Min <b id="luminositeDetectionMinValue">%LUMINOSITE_DETECTION_MIN%</b></span>
+                        <span>Max <b id="luminositeDetectionMaxValue">%LUMINOSITE_DETECTION_MAX%</b></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Heure ete / hiver</h2>
+            <div class="line luminosite-section">
+                <div class="toggle-container">
+                    <div class="toggle">
+                        <span>Manuelle</span>
+                        <input type="checkbox" id="heureEteAutoSwitch" %HEURE_ETE_AUTO% onchange="ChangeHeureEteAuto();">
+                        <span>Automatique</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Affichage</h2>
+            <div class="line luminosite-section">
+                <div class="toggle-container">
+                    <div class="toggle">
+                        <span>Normal</span>
+                        <input type="checkbox" id="affichageInverseSwitch" %AFFICHAGE_INVERSE% onchange="ChangeAffichageInverse();">
+                        <span>Inverse</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -557,6 +718,13 @@ function RefreshInfo() {
 }
 
 
+function showSavedFeedback(element) {
+  if (!element) return;
+  element.classList.remove("saved-feedback");
+  void element.offsetWidth;
+  element.classList.add("saved-feedback");
+  setTimeout(() => element.classList.remove("saved-feedback"), 650);
+}
 // Fonction pour mettre à jour l'affichage de l'heure
   function updateClock() {
     const now = new Date();
@@ -621,6 +789,16 @@ function RefreshInfo() {
 
 // Gestion du choix de la luminosité
   const sens = document.getElementById("luminosite");
+  const manualLuminosityControl = document.getElementById("manualLuminosityControl");
+  const sensorLuminosityControl = document.getElementById("sensorLuminosityControl");
+  const luminositeDetectionMin = document.getElementById("luminositeDetectionMin");
+  const luminositeDetectionMax = document.getElementById("luminositeDetectionMax");
+  const luminositeDetectionMinValue = document.getElementById("luminositeDetectionMinValue");
+  const luminositeDetectionMaxValue = document.getElementById("luminositeDetectionMaxValue");
+  const luminositeSensorValue = document.getElementById("luminositeSensorValue");
+  const luminosityDetectionSelection = document.getElementById("luminosityDetectionSelection");
+  const luminositySensorMarker = document.getElementById("luminositySensorMarker");
+  let luminositySensorRefreshTimer = null;
   let debounceTimer;
   let initialValue = sens.value; // valeur initiale
   sens.addEventListener("input", () => {
@@ -636,6 +814,7 @@ function RefreshInfo() {
             sens.value = initialValue; // revert si pas succès
           } else {
             initialValue = newValue; // mise à jour de la valeur initiale
+            showSavedFeedback(sens);
           }
         })
         .catch(error => {
@@ -643,6 +822,121 @@ function RefreshInfo() {
         });
     }, 500);
   });
+
+  function refreshLuminosityModeControls() {
+    const isAuto = document.getElementById("toggleSwitch").checked;
+    const hasSensorControl = sensorLuminosityControl && sensorLuminosityControl.dataset.enabled === "1";
+    manualLuminosityControl.style.display = isAuto ? "none" : "flex";
+    if (sensorLuminosityControl) {
+      sensorLuminosityControl.style.display = (isAuto && hasSensorControl) ? "flex" : "none";
+    }
+    updateLuminositySensorRefresh();
+  }
+
+  if (sensorLuminosityControl) {
+    sensorLuminosityControl.dataset.enabled = sensorLuminosityControl.style.display !== "none" ? "1" : "0";
+  }
+
+  function updateDualRangeVisuals() {
+    const minLimit = parseInt(luminositeDetectionMin.min, 10);
+    const maxLimit = parseInt(luminositeDetectionMax.max, 10);
+    const range = maxLimit - minLimit;
+    const minPercent = ((parseInt(luminositeDetectionMin.value, 10) - minLimit) / range) * 100;
+    const maxPercent = ((parseInt(luminositeDetectionMax.value, 10) - minLimit) / range) * 100;
+
+    luminosityDetectionSelection.style.left = `${minPercent}%`;
+    luminosityDetectionSelection.style.right = `${100 - maxPercent}%`;
+  }
+
+  function clampLuminosityDetectionValues(changedInput) {
+    let minValue = parseInt(luminositeDetectionMin.value, 10);
+    let maxValue = parseInt(luminositeDetectionMax.value, 10);
+
+    if (changedInput === luminositeDetectionMin && minValue >= maxValue) {
+      minValue = maxValue - 1;
+      luminositeDetectionMin.value = minValue;
+    }
+    if (changedInput === luminositeDetectionMax && maxValue <= minValue) {
+      maxValue = minValue + 1;
+      luminositeDetectionMax.value = maxValue;
+    }
+
+    luminositeDetectionMinValue.textContent = luminositeDetectionMin.value;
+    luminositeDetectionMaxValue.textContent = luminositeDetectionMax.value;
+    updateDualRangeVisuals();
+  }
+
+  function submitLuminosityDetection() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const minValue = luminositeDetectionMin.value;
+      const maxValue = luminositeDetectionMax.value;
+      fetch(`/option?parametre=7&min=${minValue}&max=${maxValue}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.status !== "success") {
+            console.log("Erreur lors de la mise a jour des seuils de luminosite");
+          } else {
+            showSavedFeedback(document.getElementById("luminosityDetectionRange"));
+          }
+        })
+        .catch(() => {
+          console.log("Erreur reseau lors de la mise a jour des seuils de luminosite");
+        });
+    }, 500);
+  }
+
+  if (luminositeDetectionMin && luminositeDetectionMax) {
+    [luminositeDetectionMin, luminositeDetectionMax].forEach(input => {
+      input.addEventListener("input", () => {
+        clampLuminosityDetectionValues(input);
+        submitLuminosityDetection();
+      });
+    });
+    clampLuminosityDetectionValues(null);
+  }
+
+  function updateLuminositySensorMarker(value) {
+    const minLimit = parseInt(luminositeDetectionMin.min, 10);
+    const maxLimit = parseInt(luminositeDetectionMax.max, 10);
+    const boundedValue = Math.max(minLimit, Math.min(maxLimit, value));
+    const percent = ((boundedValue - minLimit) / (maxLimit - minLimit)) * 100;
+
+    luminositeSensorValue.textContent = value;
+    luminositySensorMarker.style.left = `${percent}%`;
+    luminositySensorMarker.classList.add("visible");
+  }
+
+  function refreshLuminositySensorValue() {
+    if (!sensorLuminosityControl || sensorLuminosityControl.style.display === "none") return;
+
+    fetch("/luminosity_sensor")
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "success") {
+          updateLuminositySensorMarker(data.value);
+        } else {
+          luminositeSensorValue.textContent = "--";
+          luminositySensorMarker.classList.remove("visible");
+        }
+      })
+      .catch(() => {
+        luminositeSensorValue.textContent = "--";
+        luminositySensorMarker.classList.remove("visible");
+      });
+  }
+
+  function updateLuminositySensorRefresh() {
+    const shouldRefresh = sensorLuminosityControl && sensorLuminosityControl.style.display !== "none";
+
+    if (shouldRefresh && !luminositySensorRefreshTimer) {
+      refreshLuminositySensorValue();
+      luminositySensorRefreshTimer = setInterval(refreshLuminositySensorValue, 2000);
+    } else if (!shouldRefresh && luminositySensorRefreshTimer) {
+      clearInterval(luminositySensorRefreshTimer);
+      luminositySensorRefreshTimer = null;
+    }
+  }
 
 // Choix de la gestion de la luminosité auto ou manuelle
 let toggleSwitch_initialValue = document.getElementById("toggleSwitch").checked;
@@ -655,10 +949,49 @@ function Changebouton() {
           setTimeout(() => { document.getElementById("toggleSwitch").checked = toggleSwitch_initialValue; }, 100);
         } else {
           toggleSwitch_initialValue = lumauto;
+          showSavedFeedback(document.getElementById("toggleSwitch"));
+          refreshLuminosityModeControls();
         }
     })
     .catch(error => {
         setTimeout(() => { document.getElementById("toggleSwitch").checked = toggleSwitch_initialValue; }, 100);
+    });
+}
+refreshLuminosityModeControls();
+
+let heureEteAuto_initialValue = document.getElementById("heureEteAutoSwitch").checked;
+function ChangeHeureEteAuto() {
+  const heureeteauto = document.getElementById("heureEteAutoSwitch").checked ? 1 : 0;
+  fetch("/option?parametre=5&heureeteauto="+ heureeteauto)
+    .then(response => response.json())
+    .then(data => {
+        if(data.status !== "success") {
+          setTimeout(() => { document.getElementById("heureEteAutoSwitch").checked = heureEteAuto_initialValue; }, 100);
+        } else {
+          heureEteAuto_initialValue = document.getElementById("heureEteAutoSwitch").checked;
+          showSavedFeedback(document.getElementById("heureEteAutoSwitch"));
+        }
+    })
+    .catch(error => {
+        setTimeout(() => { document.getElementById("heureEteAutoSwitch").checked = heureEteAuto_initialValue; }, 100);
+    });
+}
+
+let affichageInverse_initialValue = document.getElementById("affichageInverseSwitch").checked;
+function ChangeAffichageInverse() {
+  const affichageinverse = document.getElementById("affichageInverseSwitch").checked ? 1 : 0;
+  fetch("/option?parametre=6&affichageinverse="+ affichageinverse)
+    .then(response => response.json())
+    .then(data => {
+        if(data.status !== "success") {
+          setTimeout(() => { document.getElementById("affichageInverseSwitch").checked = affichageInverse_initialValue; }, 100);
+        } else {
+          affichageInverse_initialValue = document.getElementById("affichageInverseSwitch").checked;
+          showSavedFeedback(document.getElementById("affichageInverseSwitch"));
+        }
+    })
+    .catch(error => {
+        setTimeout(() => { document.getElementById("affichageInverseSwitch").checked = affichageInverse_initialValue; }, 100);
     });
 }
 
@@ -666,6 +999,7 @@ function Changebouton() {
 </script> <!-- Sera remplacé automatique par la page script.js de ce même répertoire -->
 </body>
 </html>
+
 )rawliteral";
 
 const char SiteWeb_GestionWifi[] PROGMEM = R"rawliteral(
